@@ -659,6 +659,10 @@ class ReadActivityViewModel : ViewModel() {
         desiredTTSIndex = visibility.firstFullyVisibleUnderLine?.toScroll()
         changeIndex(save.toScroll())
 
+        for (index in visibility.finishedChapters) {
+            setChapterRead(index)
+        }
+
         // update the read area if changed index
         if (current != save.index)
             updateReadArea()
@@ -1549,6 +1553,10 @@ class ReadActivityViewModel : ViewModel() {
                     // this may case a bug where you cant seek back if the entire chapter is none
                     // but this is better than restarting the chapter
                     if (ttsInnerIndex > 0 || lines.isEmpty()) {
+                        // every line has been read out loud
+                        if (lines.isNotEmpty()) {
+                            setChapterRead(index)
+                        }
                         // goto next chapter and set inner to 0
                         index++
                         ttsInnerIndex = 0
@@ -1634,13 +1642,16 @@ class ReadActivityViewModel : ViewModel() {
         }
     }
 
-    private fun setScrollKeys(scrollIndex: ScrollIndex) {
+    /** Only call this once the end of the chapter has been reached, not when it is opened */
+    private fun setChapterRead(index: Int) {
         setKey(
             EPUB_CURRENT_POSITION_READ_AT,
-            "${book.title()}/${scrollIndex.index}",
+            "${book.title()}/$index",
             System.currentTimeMillis()
         )
+    }
 
+    private fun setScrollKeys(scrollIndex: ScrollIndex) {
         setKey(
             EPUB_CURRENT_POSITION_SCROLL_CHAR,
             book.title(),

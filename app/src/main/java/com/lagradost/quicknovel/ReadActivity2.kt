@@ -386,8 +386,33 @@ class ReadActivity2 : AppCompatActivity(), ColorPickerDialogListener {
                 lastHalfVisible = lines.firstOrNull {
                     it.bottom >= bottomY
                 },
+                finishedChapters = getFinishedChapters(topY, bottomY),
             )
         )
+    }
+
+    private fun getFinishedChapters(topY: Int, bottomY: Int): List<Int> {
+        val finished = arrayListOf<Int>()
+        for (i in textLayoutManager.findFirstVisibleItemPosition()..textLayoutManager.findLastVisibleItemPosition()) {
+            val item = textAdapter.getItemOrNull(i) as? TextSpan ?: continue
+            // only the last text of a chapter can finish it
+            if ((textAdapter.getItemOrNull(i + 1) as? TextSpan)?.index == item.index) continue
+
+            val visibility = transformIndexToScrollVisibilityItem(i)
+            // separators have no lines, so the entire view is used instead
+            val (top, bottom) = textAdapter.getLines(visibility).lastOrNull()
+                ?.let { line -> line.top to line.bottom }
+                ?: visibility.viewHolder?.itemView?.let { view ->
+                    val outLocation = IntArray(2)
+                    view.getLocationInWindow(outLocation)
+                    outLocation[1] to outLocation[1] + view.height
+                } ?: continue
+
+            if (top >= topY && bottom < bottomY) {
+                finished.add(item.index)
+            }
+        }
+        return finished
     }
 
     fun onScroll() {

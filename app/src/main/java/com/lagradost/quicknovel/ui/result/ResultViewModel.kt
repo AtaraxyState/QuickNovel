@@ -352,7 +352,7 @@ class ResultViewModel : ViewModel() {
                         ?: return@let
                 val index = chapterIndex(chapter)
                 if (index != null && index >= 0) {
-                    setReadChapter(chapter, true)
+                    // the reader marks the chapter as read once its end is reached
                     setKey(EPUB_CURRENT_POSITION, streamResponse.name, index)
                     setKey(
                         EPUB_CURRENT_POSITION_CHAPTER,
