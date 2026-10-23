@@ -83,6 +83,16 @@ data class Editor(
         }
     }
 
+    /** Same format as setKey, always remember to call apply after */
+    fun <T> setKey(path: String, value: T) {
+        editor.putString(path, DataStore.mapper.writeValueAsString(value))
+    }
+
+    /** Always remember to call apply after */
+    fun removeKey(path: String) {
+        editor.remove(path)
+    }
+
     private fun isStringSet(value: Any?) : Boolean {
         if (value is Set<*>) {
             return value.filterIsInstance<String>().size == value.size

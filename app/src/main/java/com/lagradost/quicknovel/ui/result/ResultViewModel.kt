@@ -19,6 +19,9 @@ import com.lagradost.quicknovel.BookDownloader2Helper.generateId
 import com.lagradost.quicknovel.ChapterData
 import com.lagradost.quicknovel.CommonActivity.activity
 import com.lagradost.quicknovel.DOWNLOAD_EPUB_LAST_ACCESS
+import com.lagradost.quicknovel.DataStore
+import com.lagradost.quicknovel.DataStore.containsKey
+import com.lagradost.quicknovel.DataStore.getFolderName
 import com.lagradost.quicknovel.DownloadActionType
 import com.lagradost.quicknovel.DownloadProgressState
 import com.lagradost.quicknovel.DownloadState
@@ -184,6 +187,30 @@ class ResultViewModel : ViewModel() {
                 "${streamResponse.name}/$index",
             )
         }
+
+        return true
+    }
+
+    /** Marks the chapter and every chapter before it as read or unread */
+    fun setReadChaptersUpTo(chapter: ChapterData, value: Boolean): Boolean {
+        val streamResponse =
+            (load as? StreamResponse) ?: return false
+        val index = chapterIndex(chapter) ?: return false
+        val ctx = context ?: return false
+
+        // setKey and removeKey apply on every call, which is too expensive for many chapters
+        val editor = DataStore.editor(ctx)
+        val readAt = System.currentTimeMillis()
+        for (i in 0..index) {
+            val path = getFolderName(EPUB_CURRENT_POSITION_READ_AT, "${streamResponse.name}/$i")
+            if (!value) {
+                editor.removeKey(path)
+            } else if (!ctx.containsKey(path)) {
+                // keep the read time of already read chapters, as it is used for sorting
+                editor.setKey(path, readAt)
+            }
+        }
+        editor.apply()
 
         return true
     }
